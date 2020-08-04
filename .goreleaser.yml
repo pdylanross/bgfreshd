@@ -15,7 +15,7 @@ archives:
     386: i386
     amd64: x86_64
   files:
-    - LISCENSE
+    - LICENSE
 checksum:
   name_template: 'checksums.txt'
 snapshot:
