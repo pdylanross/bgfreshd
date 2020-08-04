@@ -6,7 +6,7 @@ builds:
   - CGO_ENABLED=0
   main: ./cmd/bgfreshd
   ldflags:
-    - -X main.Version= {{.Version}}
+    - -X main.Version={{.Version}}
 archives:
 - replacements:
     darwin: Darwin
