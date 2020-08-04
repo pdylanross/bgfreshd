@@ -2,22 +2,35 @@ before:
   hooks:
     - go mod download
 builds:
-- env:
-  - CGO_ENABLED=0
-  main: ./cmd/bgfreshd
-  ldflags:
-    - -X main.Version={{.Version}}
+  - env:
+      - CGO_ENABLED=0
+    main: ./cmd/bgfreshd
+    ldflags:
+      - -X main.Version={{.Version}}
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - 386
+      - arm
+      - arm64
 archives:
-- replacements:
-    darwin: Darwin
-    linux: Linux
-    windows: Windows
-    386: i386
-    amd64: x86_64
-  files:
-    - LICENSE
+  - name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+    replacements:
+      darwin: Darwin
+      linux: Linux
+      windows: Windows
+      386: i386
+      amd64: x86_64
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - LICENSE
 checksum:
-  name_template: 'checksums.txt'
+  name_template: "checksums.txt"
 snapshot:
   name_template: "{{ .Tag }}-next"
 changelog:
