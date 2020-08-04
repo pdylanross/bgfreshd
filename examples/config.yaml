@@ -1,0 +1,35 @@
+outputPath: /home/dylan/Pictures/Backgrounds
+maxBackgrounds: 10
+maxRotationAge: 20
+minRotationAge: 5
+sources:
+  - type: reddit
+    weight: 1
+    options:
+      subreddit: NaturePorn
+      sort: top
+      topTimespan: year
+    filters:
+      - type: chance
+        options:
+          chance: 1
+  - type: reddit
+    weight: 1
+    options:
+      subreddit: wallpaper
+      sort: hot
+filters:
+  - type: color
+    options:
+      desiredColor:
+        red: 56
+        green: 65
+        blue: 82
+      acceptableDistance: .2
+  - type: size
+    options:
+      minX: 2560
+      minY: 1440
+
+
+
