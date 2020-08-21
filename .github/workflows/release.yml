@@ -23,13 +23,11 @@ jobs:
           fetch-depth: 0
       - name: Tag sources
         run: |
-          if [ $(git rev-parse --abbrev-ref HEAD) != "master" ]; then
-            # ensure a local 'master' branch exists at 'refs/heads/master'
-            git branch --track master origin/master
-          fi
-
-          git checkout HEAD^
           autotag --scheme=conventional
+
+          git config user.name tagbot
+          git config user.email github-actions@github.com
+          git push --tags
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
