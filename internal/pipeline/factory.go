@@ -2,22 +2,33 @@ package pipeline
 
 import (
 	"bgfreshd/internal/config"
-	"bgfreshd/internal/sources"
 	"bgfreshd/pkg/filter"
 	"bgfreshd/pkg/source"
 	"fmt"
 	"github.com/sirupsen/logrus"
 )
 
+// FilterFactoryFunc describes how to construct a filter
 type FilterFactoryFunc func(bgFilter *config.BgFilter, log *logrus.Entry) (filter.Filter, error)
+// SourceFactoryFunc describes how to construct a source
+type SourceFactoryFunc func(cfg *config.BgSource, log *logrus.Entry) (source.Source, error)
 
 var filterRegistrations map[string]FilterFactoryFunc
+var sourceRegistrations map[string]SourceFactoryFunc
 
 func AddFilterRegistration(name string, factoryFunc FilterFactoryFunc) {
 	if filterRegistrations == nil {
 		filterRegistrations = make(map[string]FilterFactoryFunc)
 	}
 	filterRegistrations[name] = factoryFunc
+}
+
+func AddSourceRegistration(name string, factoryFunc SourceFactoryFunc) {
+	if sourceRegistrations == nil {
+		sourceRegistrations = make(map[string]SourceFactoryFunc)
+	}
+
+	sourceRegistrations[name] = factoryFunc
 }
 
 type FilterNotFoundError struct {
@@ -57,11 +68,11 @@ func CreateSource(config *config.BgSource, sourceLog *logrus.Entry) (source.Sour
 		"source": config.Type,
 	})
 
-	switch config.Type {
-	case "reddit":
-		return sources.NewRedditSource(config, individualLog)
+	factory, ok := sourceRegistrations[config.Type]
+	if !ok {
+		sourceLog.Errorf("Could not find source of type %s", config.Type)
+		return nil, &SourceNotFoundError{sourceName: config.Type}
 	}
 
-	sourceLog.Errorf("Could not find source type %s!", config.Type)
-	return nil, &SourceNotFoundError{sourceName: config.Type}
+	return factory(config, individualLog)
 }

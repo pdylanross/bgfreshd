@@ -4,7 +4,9 @@ import (
 	"bgfreshd/internal"
 	"bgfreshd/internal/config"
 	"bgfreshd/internal/db"
+	_ "bgfreshd/internal/filters"
 	"bgfreshd/internal/pipeline"
+	_ "bgfreshd/internal/sources"
 	"bgfreshd/pkg/background"
 	"bufio"
 	"context"
@@ -14,6 +16,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"runtime/debug"
 	"time"
 )
 
@@ -72,8 +75,8 @@ func NewService(c *BgFreshConfig) (Service, error) {
 		logger: c.Log.WithFields(logrus.Fields{
 			"section": "service",
 		}),
-		ctx:    ctx,
-		cancel: cancel,
+		ctx:               ctx,
+		cancel:            cancel,
 		triggerGeneration: make(chan int),
 	}
 
@@ -89,7 +92,7 @@ func (b *bgFreshService) init() error {
 }
 
 func (b *bgFreshService) Run() error {
-	go backgroundJob(b, time.Second * 30, watchOutput)
+	go backgroundJob(b, time.Second*30, watchOutput)
 	for {
 		stale, err := b.db.GetStaleBackgrounds()
 		if err != nil {
@@ -118,6 +121,7 @@ func (b *bgFreshService) Run() error {
 			}
 		}
 		runtime.GC()
+		debug.FreeOSMemory()
 
 		select {
 		case <-time.After(time.Minute * 5):
@@ -214,7 +218,7 @@ func backgroundJob(b *bgFreshService, occursEvery time.Duration, job func(b *bgF
 	}
 }
 
-func watchOutput(b * bgFreshService) {
+func watchOutput(b *bgFreshService) {
 	active, err := b.db.GetActiveBackgrounds()
 	if err != nil {
 		b.logger.Warnf("watch output get active error: %s", err.Error())

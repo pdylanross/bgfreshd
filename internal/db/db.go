@@ -3,6 +3,7 @@ package db
 import (
 	"bgfreshd/internal/config"
 	"bgfreshd/pkg/background"
+	"bgfreshd/pkg/source"
 	"context"
 	"github.com/sirupsen/logrus"
 	bolt "go.etcd.io/bbolt"
@@ -20,6 +21,7 @@ type BackgroundDb interface {
 	MarkInactive(name string) error
 	MarkStale(name string) error
 	Exists(key string) bool
+	NewSourceDb(sourceName string, sourceMeta string) (source.Db, error)
 }
 
 type backgroundDb struct {
@@ -28,6 +30,10 @@ type backgroundDb struct {
 	db     *bolt.DB
 	ctx    context.Context
 	cancel context.CancelFunc
+}
+
+func (b *backgroundDb) NewSourceDb(sourceName string, sourceMeta string) (source.Db, error) {
+	panic("implement me")
 }
 
 func (b *backgroundDb) Stop() {
@@ -102,7 +108,7 @@ func (b *backgroundDb) GetActiveBackgrounds() ([]string, error) {
 	var active []string
 	err := b.db.View(func(tx *bolt.Tx) error {
 		return tx.ForEach(func(name []byte, bucket *bolt.Bucket) error {
-			isActive := b.getBool(bucket, "active")
+			isActive, _ := b.getBool(bucket, "active")
 			if isActive {
 				active = append(active, string(name))
 			}
@@ -119,8 +125,8 @@ func (b *backgroundDb) GetStaleBackgrounds() ([]string, error) {
 	var stale []string
 	err := b.db.View(func(tx *bolt.Tx) error {
 		return tx.ForEach(func(name []byte, bucket *bolt.Bucket) error {
-			isStale := b.getBool(bucket, "stale")
-			isActive := b.getBool(bucket, "active")
+			isStale, _ := b.getBool(bucket, "stale")
+			isActive, _ := b.getBool(bucket, "active")
 			if isActive && isStale {
 				stale = append(stale, string(name))
 			}

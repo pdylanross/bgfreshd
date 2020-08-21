@@ -3,7 +3,6 @@ module bgfreshd
 go 1.14
 
 require (
-	github.com/boltdb/bolt v1.3.1
 	github.com/goccy/go-yaml v1.4.3
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/mroth/weightedrand v0.2.1

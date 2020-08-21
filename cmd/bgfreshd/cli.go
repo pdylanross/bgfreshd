@@ -1,7 +1,6 @@
 package main
 
 import (
-	_ "bgfreshd/internal/filters"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 	"math/rand"
@@ -16,9 +15,10 @@ func RunCli() {
 	var config string
 	var verbose bool = false
 	app := &cli.App{
-		Name:     "bgfreshd",
-		Version:  Version,
-		Compiled: CompiledAt,
+		Name:        "bgfreshd",
+		Description: "A background folder rotation service",
+		Version:     Version,
+		Compiled:    CompiledAt,
 		Authors: []*cli.Author{
 			&cli.Author{
 				Name:  "Dylan Ross",

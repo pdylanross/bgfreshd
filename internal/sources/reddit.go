@@ -3,6 +3,7 @@ package sources
 import (
 	"bgfreshd/internal"
 	"bgfreshd/internal/config"
+	"bgfreshd/internal/pipeline"
 	"bgfreshd/internal/sources/redditApi"
 	"bgfreshd/pkg/background"
 	"bgfreshd/pkg/source"
@@ -18,6 +19,10 @@ type RedditOptions struct {
 	Subreddit   string `yaml:"subreddit"`
 	SortBy      string `yaml:"sort"`
 	TopTimespan string `yaml:"topTimespan"`
+}
+
+func init() {
+	pipeline.AddSourceRegistration("reddit", NewRedditSource)
 }
 
 func NewRedditSource(config *config.BgSource, sourceLog *logrus.Entry) (source.Source, error) {

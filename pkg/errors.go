@@ -12,3 +12,12 @@ type SourceEmptyError struct {
 func (s SourceEmptyError) Error() string {
 	return fmt.Sprintf("source %s empty", s.Source.GetName())
 }
+
+type NotFoundError struct {
+	Key string
+}
+
+func (n NotFoundError) Error() string {
+	return fmt.Sprintf("item not found: %s", n.Key)
+}
+
