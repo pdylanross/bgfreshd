@@ -14,16 +14,7 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v1
       - name: Tag sources
-        run: |
-          # fetch all tags and history:
-          git fetch --tags --unshallow --prune
-
-          if [ $(git rev-parse --abbrev-ref HEAD) != "master" ]; then
-            # ensure a local 'master' branch exists at 'refs/heads/master'
-            git branch --track master origin/master
-          fi
-
-          autotag --scheme=conventional
+        run: autotag --scheme=conventional
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
