@@ -18,9 +18,18 @@ jobs:
         if: steps.cache-autotag.outputs.cache-hit != 'true'
         run: curl -sL https://git.io/autotag-install | sudo sh -s -- -b /usr/local/bin v1.3.4
       - name: Check out code
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - name: Tag sources
-        run: autotag --scheme=conventional
+        run: |
+          if [ $(git rev-parse --abbrev-ref HEAD) != "master" ]; then
+            # ensure a local 'master' branch exists at 'refs/heads/master'
+            git branch --track master origin/master
+          fi
+
+          git checkout HEAD^
+          autotag --scheme=conventional
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
