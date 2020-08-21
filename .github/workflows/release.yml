@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install Autotag
-        run: curl -sL https://git.io/autotag-install | sh -- v1.3.4
+        run: curl -sL https://git.io/autotag-install | sh -s -- v1.3.4
       - name: Check out code
         uses: actions/checkout@v1
       - name: Tag sources
