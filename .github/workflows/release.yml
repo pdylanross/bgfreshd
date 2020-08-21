@@ -10,11 +10,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install Autotag
-        run: curl -sL https://git.io/autotag-install | sh -s -- v1.3.4 -b /usr/bin
+        run: curl -sL https://git.io/autotag-install | sh -s -- v1.3.4 -b ./bin
       - name: Check out code
         uses: actions/checkout@v1
       - name: Tag sources
-        run: /usr/bin/autotag --scheme=conventional
+        run: ./bin/autotag --scheme=conventional
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
