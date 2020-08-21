@@ -16,7 +16,7 @@ jobs:
           key: ${{ runner.os }}-autotag-v1.3.4
       - name: Install Autotag
         if: steps.cache-autotag.outputs.cache-hit != 'true'
-        run: curl -sL https://git.io/autotag-install | sh -s -- -b /usr/local/bin v1.3.4
+        run: curl -sL https://git.io/autotag-install | sudo sh -s -- -b /usr/local/bin v1.3.4
       - name: Check out code
         uses: actions/checkout@v1
       - name: Tag sources
