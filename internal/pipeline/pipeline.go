@@ -2,7 +2,9 @@ package pipeline
 
 import (
 	"bgfreshd/internal/config"
+	"bgfreshd/internal/db"
 	"bgfreshd/pkg/background"
+	"bgfreshd/pkg/filter"
 	"github.com/mroth/weightedrand"
 	"github.com/sirupsen/logrus"
 )
@@ -13,7 +15,7 @@ type Pipeline interface {
 }
 
 // NewPipeline creates the pipeline from config
-func NewPipeline(config *config.Config, log *logrus.Logger) (Pipeline, error) {
+func NewPipeline(config *config.Config, db db.BackgroundDb, log *logrus.Logger) (Pipeline, error) {
 	pipelineLog := log.WithFields(logrus.Fields{
 		"section": "pipeline",
 	})
@@ -43,7 +45,7 @@ func NewPipeline(config *config.Config, log *logrus.Logger) (Pipeline, error) {
 		last := globalCopy.getLastNode()
 		last.next = sourceFilter
 
-		loadedSource, err := CreateSource(&currentSource, sourceLog)
+		loadedSource, err := CreateSource(&currentSource, db, sourceLog)
 		if err != nil {
 			return nil, err
 		}
@@ -78,7 +80,7 @@ func NewPipeline(config *config.Config, log *logrus.Logger) (Pipeline, error) {
 	}, nil
 }
 
-func loadFilters(configured []config.BgFilter, filterLog *logrus.Entry) (*filterNode, error) {
+func loadFilters(configured []filter.Configuration, filterLog *logrus.Entry) (*filterNode, error) {
 	if len(configured) == 0 {
 		return nil, nil
 	}
@@ -106,7 +108,7 @@ func loadFilters(configured []config.BgFilter, filterLog *logrus.Entry) (*filter
 	return headFilter, nil
 }
 
-func loadSingleFilter(conf *config.BgFilter, filterLog *logrus.Entry) (*filterNode, error) {
+func loadSingleFilter(conf *filter.Configuration, filterLog *logrus.Entry) (*filterNode, error) {
 	filterImpl, err := CreateFilter(conf, filterLog)
 	if err != nil {
 		return nil, err

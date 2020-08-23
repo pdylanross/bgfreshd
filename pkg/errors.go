@@ -20,4 +20,3 @@ type NotFoundError struct {
 func (n NotFoundError) Error() string {
 	return fmt.Sprintf("item not found: %s", n.Key)
 }
-

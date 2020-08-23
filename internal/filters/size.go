@@ -2,7 +2,6 @@ package filters
 
 import (
 	"bgfreshd/internal"
-	"bgfreshd/internal/config"
 	"bgfreshd/internal/pipeline"
 	"bgfreshd/pkg/background"
 	"bgfreshd/pkg/filter"
@@ -21,7 +20,7 @@ func init() {
 	pipeline.AddFilterRegistration("size", NewSizeFilter)
 }
 
-func NewSizeFilter(config *config.BgFilter, filterLog *logrus.Entry) (filter.Filter, error) {
+func NewSizeFilter(config *filter.Configuration, filterLog *logrus.Entry) (filter.Filter, error) {
 	var options SizeOptions
 	if err := internal.CastDecodedYamlToType(config.Options, &options); err != nil {
 		return nil, err

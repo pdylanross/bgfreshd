@@ -1,31 +1,26 @@
 package pipeline
 
 import (
-	"bgfreshd/internal/config"
+	"bgfreshd/internal/db"
 	"bgfreshd/pkg/filter"
 	"bgfreshd/pkg/source"
 	"fmt"
 	"github.com/sirupsen/logrus"
 )
 
-// FilterFactoryFunc describes how to construct a filter
-type FilterFactoryFunc func(bgFilter *config.BgFilter, log *logrus.Entry) (filter.Filter, error)
-// SourceFactoryFunc describes how to construct a source
-type SourceFactoryFunc func(cfg *config.BgSource, log *logrus.Entry) (source.Source, error)
+var filterRegistrations map[string]filter.FactoryFunc
+var sourceRegistrations map[string]source.FactoryFunc
 
-var filterRegistrations map[string]FilterFactoryFunc
-var sourceRegistrations map[string]SourceFactoryFunc
-
-func AddFilterRegistration(name string, factoryFunc FilterFactoryFunc) {
+func AddFilterRegistration(name string, factoryFunc filter.FactoryFunc) {
 	if filterRegistrations == nil {
-		filterRegistrations = make(map[string]FilterFactoryFunc)
+		filterRegistrations = make(map[string]filter.FactoryFunc)
 	}
 	filterRegistrations[name] = factoryFunc
 }
 
-func AddSourceRegistration(name string, factoryFunc SourceFactoryFunc) {
+func AddSourceRegistration(name string, factoryFunc source.FactoryFunc) {
 	if sourceRegistrations == nil {
-		sourceRegistrations = make(map[string]SourceFactoryFunc)
+		sourceRegistrations = make(map[string]source.FactoryFunc)
 	}
 
 	sourceRegistrations[name] = factoryFunc
@@ -39,7 +34,7 @@ func (f *FilterNotFoundError) Error() string {
 	return fmt.Sprintf("filter %s not found", f.filterName)
 }
 
-func CreateFilter(config *config.BgFilter, filterLog *logrus.Entry) (filter.Filter, error) {
+func CreateFilter(config *filter.Configuration, filterLog *logrus.Entry) (filter.Filter, error) {
 	filterLog.Infof("Constructing filter of type %s", config.Type)
 	individualLog := filterLog.WithFields(logrus.Fields{
 		"filter": config.Type,
@@ -62,7 +57,7 @@ func (s *SourceNotFoundError) Error() string {
 	return fmt.Sprintf("source %s not found", s.sourceName)
 }
 
-func CreateSource(config *config.BgSource, sourceLog *logrus.Entry) (source.Source, error) {
+func CreateSource(config *source.Configuration, db db.BackgroundDb, sourceLog *logrus.Entry) (source.Source, error) {
 	sourceLog.Infof("Constructing source of type %s", config.Type)
 	individualLog := sourceLog.WithFields(logrus.Fields{
 		"source": config.Type,
@@ -74,5 +69,10 @@ func CreateSource(config *config.BgSource, sourceLog *logrus.Entry) (source.Sour
 		return nil, &SourceNotFoundError{sourceName: config.Type}
 	}
 
-	return factory(config, individualLog)
+	return factory(
+		config,
+		func(meta string) (source.Db, error) {
+			return db.NewSourceDb(config.Type, meta)
+		},
+		individualLog)
 }
