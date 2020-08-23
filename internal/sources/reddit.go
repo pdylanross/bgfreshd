@@ -2,7 +2,6 @@ package sources
 
 import (
 	"bgfreshd/internal"
-	"bgfreshd/internal/config"
 	"bgfreshd/internal/pipeline"
 	"bgfreshd/internal/sources/redditApi"
 	"bgfreshd/pkg/background"
@@ -25,7 +24,7 @@ func init() {
 	pipeline.AddSourceRegistration("reddit", NewRedditSource)
 }
 
-func NewRedditSource(config *config.BgSource, sourceLog *logrus.Entry) (source.Source, error) {
+func NewRedditSource(config *source.Configuration, dbFactory source.DbFactoryFunc, sourceLog *logrus.Entry) (source.Source, error) {
 	var options RedditOptions
 	if err := internal.CastDecodedYamlToType(config.Options, &options); err != nil {
 		return nil, err
@@ -39,17 +38,37 @@ func NewRedditSource(config *config.BgSource, sourceLog *logrus.Entry) (source.S
 		SortBy:   options.SortBy,
 		Timespan: options.TopTimespan,
 	}
-	return &redditSource{
-		sourceLog:    sourceLog,
+
+	newSource := &redditSource{
+		log:          sourceLog,
+		db:           nil,
 		opt:          options,
 		api:          redditApi.NewRedditApi(sourceLog, 10),
 		sortOptions:  sortOpt,
 		currentAfter: "",
-	}, nil
+	}
+
+	db, err := dbFactory(newSource.GetName())
+	if  err != nil {
+		return nil, err
+	}
+
+	newSource.db = db
+	if exists, err := newSource.db.KeyExists("after"); exists && err == nil {
+		newSource.currentAfter, err = newSource.db.GetString("after")
+		if err != nil {
+			return nil, err
+		}
+	}else if err != nil {
+		return nil, err
+	}
+
+	return newSource, nil
 }
 
 type redditSource struct {
-	sourceLog   *logrus.Entry
+	log         *logrus.Entry
+	db          source.Db
 	opt         RedditOptions
 	api         redditApi.Api
 	sortOptions redditApi.SortOptions
@@ -73,6 +92,13 @@ func (r *redditSource) Next() (background.Background, error) {
 
 	// no posts found, keep paging
 	r.currentAfter = page.Data.After
+
+	// currently we just store our progress in db, never messing with it
+	// todo: make this paging much smarter (IE if we're on hot for last day, reset this once a day, etc)
+	if err := r.db.SetString("after", r.currentAfter); err != nil {
+		return nil, err
+	}
+
 	return r.Next()
 }
 
@@ -81,16 +107,16 @@ func (r *redditSource) GetName() string {
 }
 
 func (r *redditSource) processPage(post redditApi.Child) background.Background {
-	r.sourceLog.Debugf("process post \"%s\"", post.Data.Title)
+	r.log.Debugf("process post \"%s\"", post.Data.Title)
 
 	if post.Data.PostHint != redditApi.PostHintImage {
-		r.sourceLog.Debug("post not image")
+		r.log.Debug("post not image")
 		return nil
 	}
 
 	img, err := r.downloadImage(post.Data.URL)
 	if err != nil {
-		r.sourceLog.Warnf("error downloading image %s for post %s : \"%s\"", post.Data.URL, post.Data.Title, err.Error())
+		r.log.Warnf("error downloading image %s for post %s : \"%s\"", post.Data.URL, post.Data.Title, err.Error())
 		return nil
 	}
 
@@ -107,7 +133,7 @@ func (r *redditSource) downloadImage(imageUrl string) (image.Image, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer internal.Deferrer(r.sourceLog, resp.Body.Close)
+	defer internal.Deferrer(r.log, resp.Body.Close)
 
 	contentType := resp.Header.Get("content-type")
 	switch contentType {

@@ -5,6 +5,7 @@ import (
 	"bgfreshd/pkg/background"
 	"bgfreshd/pkg/source"
 	"context"
+	"fmt"
 	"github.com/sirupsen/logrus"
 	bolt "go.etcd.io/bbolt"
 	"os"
@@ -33,7 +34,11 @@ type backgroundDb struct {
 }
 
 func (b *backgroundDb) NewSourceDb(sourceName string, sourceMeta string) (source.Db, error) {
-	panic("implement me")
+	uniq := fmt.Sprintf("%s-%s", sourceName, sourceMeta)
+	return &sourceDb{
+		sourceUniqueName: uniq,
+		parent:           b,
+	}, nil
 }
 
 func (b *backgroundDb) Stop() {

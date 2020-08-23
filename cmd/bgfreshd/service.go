@@ -53,14 +53,14 @@ func NewService(c *BgFreshConfig) (Service, error) {
 		return nil, err
 	}
 
-	pl, err := pipeline.NewPipeline(cfg, c.Log)
+	d, err := db.NewDb(cfg, c.Log.WithFields(logrus.Fields{
+		"section": "db",
+	}))
 	if err != nil {
 		return nil, err
 	}
 
-	d, err := db.NewDb(cfg, c.Log.WithFields(logrus.Fields{
-		"section": "db",
-	}))
+	pl, err := pipeline.NewPipeline(cfg, d, c.Log)
 	if err != nil {
 		return nil, err
 	}

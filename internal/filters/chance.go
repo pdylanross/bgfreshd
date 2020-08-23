@@ -2,7 +2,6 @@ package filters
 
 import (
 	"bgfreshd/internal"
-	"bgfreshd/internal/config"
 	"bgfreshd/internal/pipeline"
 	"bgfreshd/pkg/background"
 	"bgfreshd/pkg/filter"
@@ -18,7 +17,7 @@ func init() {
 	pipeline.AddFilterRegistration("chance", NewChanceFilter)
 }
 
-func NewChanceFilter(config *config.BgFilter, filterLog *logrus.Entry) (filter.Filter, error) {
+func NewChanceFilter(config *filter.Configuration, filterLog *logrus.Entry) (filter.Filter, error) {
 	var options ChanceOptions
 	if err := internal.CastDecodedYamlToType(config.Options, &options); err != nil {
 		return nil, err

@@ -1,6 +1,8 @@
 package config
 
 import (
+	"bgfreshd/pkg/filter"
+	"bgfreshd/pkg/source"
 	"errors"
 	"fmt"
 	"github.com/goccy/go-yaml"
@@ -9,26 +11,12 @@ import (
 
 // Config is the main configuration format
 type Config struct {
-	OutputPath     string     `yaml:"outputPath"`
-	MaxBackgrounds int        `yaml:"maxBackgrounds"`
-	MinRotationAge int        `yaml:"minRotationAge"`
-	MaxRotationAge int        `yaml:"maxRotationAge"`
-	Sources        []BgSource `yaml:"sources"`
-	Filters        []BgFilter `yaml:"filters"`
-}
-
-// BgSource is the base data type to describe a background source
-type BgSource struct {
-	Filters []BgFilter  `yaml:"filters"`
-	Type    string      `yaml:"type"`
-	Options interface{} `yaml:"options"`
-	Weight  *uint       `yaml:"weight,omitempty"`
-}
-
-// BgFilter is the base data type to describe a filter
-type BgFilter struct {
-	Type    string                 `yaml:"type"`
-	Options map[string]interface{} `yaml:"options"`
+	OutputPath     string                 `yaml:"outputPath"`
+	MaxBackgrounds int                    `yaml:"maxBackgrounds"`
+	MinRotationAge int                    `yaml:"minRotationAge"`
+	MaxRotationAge int                    `yaml:"maxRotationAge"`
+	Sources        []source.Configuration `yaml:"sources"`
+	Filters        []filter.Configuration `yaml:"filters"`
 }
 
 // Load loads the config at the given path
@@ -71,11 +59,11 @@ func validate(config *Config) error {
 	return nil
 }
 
-func validateFilter(config *BgFilter) error {
+func validateFilter(config *filter.Configuration) error {
 	return nil
 }
 
-func validateSource(config *BgSource) error {
+func validateSource(config *source.Configuration) error {
 
 	if config.Weight == nil {
 		config.Weight = new(uint)
